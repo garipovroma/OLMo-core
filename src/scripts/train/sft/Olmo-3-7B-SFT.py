@@ -408,6 +408,18 @@ def train(checkpoint: str, config: SFTConfig, no_save_tokenizer: bool):
     # Set RNG states on all devices.
     seed_all(config.init_seed)
 
+    from olmo_core.train.callbacks import Callback
+
+    class NirvanaDumpCallback(Callback):
+        def post_checkpoint_saved(self, path):
+            if get_rank() == 0:
+                import nirvana_dl.snapshot
+                print(f'---------------- DUMPING NIRVANA SNAPSHOT ----------------')
+                nirvana_dl.snapshot.dump_snapshot()
+                print(f'---------------- NIRVANA SNAPSHOT DUMPER ----------------')
+
+    config.trainer.callbacks["nirvana_snapshot"] = NirvanaDumpCallback()
+
     # Build components.
     model = config.model.build(init_device="meta")
     train_module = config.train_module.build(model)
