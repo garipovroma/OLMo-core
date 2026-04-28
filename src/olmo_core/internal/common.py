@@ -32,16 +32,16 @@ def get_beaker_username() -> Optional[str]:
 
 
 def get_root_dir(cluster: str) -> str:
-    if cluster.startswith("ai2/"):
-        with get_beaker_client() as beaker:
-            cl = beaker.cluster.get(cluster)
-            tags = set(cl.tags)
-            if "storage:weka" in tags:
-                return "/weka/oe-training-default/ai2-llm"
-            else:
-                return "gs://ai2-llm"
-    else:
-        return "gs://ai2-llm"
+    # if cluster.startswith("ai2/"):
+    #     with get_beaker_client() as beaker:
+    #         cl = beaker.cluster.get(cluster)
+    #         tags = set(cl.tags)
+    #         if "storage:weka" in tags:
+    #             return "/weka/oe-training-default/ai2-llm"
+    #         else:
+    #             return "gs://ai2-llm"
+    # else:
+    return "gs://ai2-llm"
 
 
 def get_work_dir(root_dir: str) -> str:
@@ -83,11 +83,11 @@ def build_launch_config(
     if root_dir.startswith("/weka/"):
         weka_buckets.append(BeakerWekaBucket("oe-training-default", "/weka/oe-training-default"))
 
-    beaker_user = get_beaker_username()
-    if beaker_user is None:
-        raise RuntimeError(
-            "Environment not configured correctly for Beaker, you may be missing the BEAKER_TOKEN env var."
-        )
+    beaker_user = "get_beaker_username()"
+    # if beaker_user is None:
+    #     raise RuntimeError(
+    #         "Environment not configured correctly for Beaker, you may be missing the BEAKER_TOKEN env var."
+    #     )
     beaker_user = beaker_user.upper()
 
     env_secrets = [
