@@ -418,7 +418,7 @@ def train(checkpoint: str, config: SFTConfig, no_save_tokenizer: bool):
                 nirvana_dl.snapshot.dump_snapshot()
                 print(f'---------------- NIRVANA SNAPSHOT DUMPER ----------------')
 
-    config.trainer.callbacks["nirvana_snapshot"] = NirvanaDumpCallback()
+    config.trainer.add_callback("nirvana_snapshot", NirvanaDumpCallback())
 
     # Build components.
     model = config.model.build(init_device="meta")
