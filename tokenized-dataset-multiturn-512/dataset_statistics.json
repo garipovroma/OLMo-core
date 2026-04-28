@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-04-28 13:43:36",
+  "output_directory": "tokenized-dataset-multiturn-512",
+  "configuration": {
+    "tokenizer": "allenai/Olmo-3-7B-Think-SFT",
+    "max_sequence_length": 32768,
+    "chat_template": "olmo"
+  },
+  "per_dataset_statistics": [
+    {
+      "dataset_name": "garipovroma/Dolci-Think-SFT-7B-512-multiturn",
+      "dataset_split": "train",
+      "initial_instances": 512,
+      "instances_after_transformation": 512,
+      "instances_filtered_during_transformation": 0,
+      "frac_or_num_samples": 1.0,
+      "original_dataset_size": 512,
+      "is_upsampled": false,
+      "upsampling_factor": 1.0,
+      "final_instances_in_output": 512,
+      "final_tokens_in_output": 9393879,
+      "final_trainable_tokens_in_output": 6590770,
+      "instances_filtered_after_tokenization": 0,
+      "avg_tokens_per_instance": 18347.419921875,
+      "percentage_of_total_tokens": 100.0,
+      "percentage_of_total_instances": 100.0
+    }
+  ],
+  "overall_statistics": {
+    "total_datasets": 1,
+    "total_instances": 512,
+    "total_tokens": 9393879,
+    "trainable_tokens": 6590770,
+    "trainable_percentage": 70.16026073999889,
+    "instances_filtered": 0,
+    "average_sequence_length": 18347.419921875
+  }
+}

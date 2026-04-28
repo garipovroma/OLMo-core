@@ -1,0 +1,41 @@
+Dataset Statistics Report
+================================================================================
+Generated: 2026-04-28 13:43:36
+Output Directory: tokenized-dataset-multiturn-512
+
+Configuration:
+----------------------------------------
+- Tokenizer: allenai/Olmo-3-7B-Think-SFT
+- Max Sequence Length: 32768
+- Chat Template: olmo
+
+Per-Dataset Statistics:
+================================================================================
+
+Dataset: garipovroma/Dolci-Think-SFT-7B-512-multiturn
+- Split: train
+
+Pre-transformation:
+  - Instances loaded: 512
+  - Instances after transformation: 512
+  - Instances filtered during transformation: 0
+  - Sampling fraction: 1.0
+
+Final output statistics (after shuffling):
+  - Instances in output: 512
+  - Total tokens: 9,393,879
+  - Trainable tokens: 6,590,770
+  - Instances with no labels: 0
+  - Average tokens per instance: 18347.4
+  - Percentage of total tokens: 100.0%
+  - Percentage of total instances: 100.0%
+
+================================================================================
+Overall Statistics:
+================================================================================
+- Total datasets: 1
+- Total instances: 512
+- Total tokens: 9,393,879
+- Trainable tokens: 6,590,770 (70.2%)
+- Instances filtered out: 0
+- Average sequence length: 18347.4
