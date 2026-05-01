@@ -430,19 +430,23 @@ class ModelOnlyCheckpointCallback(Callback):
         log.info(f"Model-only checkpoint interval: every {self._save_interval} steps")
 
     def post_checkpoint_saved(self, path: str):
-        if self._save_interval is None:
+        if self._next_save_step is None:
             return
-        if self.trainer.global_step % self._save_interval != 0:
+        if self.trainer.global_step < self._next_save_step:
             return
-        model_path = str(path) + "-model"
+        model_path = str(path) + f"-model-{self._next_save_step}"
         log.info(f"Saving model-only checkpoint to '{model_path}'...")
-        sd = self.trainer.train_module.state_dict_to_save(optim=False)
-        save_state_dict(
-            f"{model_path}/model_and_optim",
-            sd,
-            process_group=self.trainer.checkpointer.process_group,
-        )
-        self._saved.append(model_path)
+        try:
+            sd = self.trainer.train_module.state_dict_to_save(optim=False)
+            save_state_dict(
+                f"{model_path}/model_and_optim",
+                sd,
+                process_group=self.trainer.checkpointer.process_group,
+            )
+            self._next_save_step += self._save_interval
+            log.info(f"Model-only checkpoint saved to '{model_path}'")
+        except Exception as e:
+            log.warning(f"Model-only checkpoint save failed: {e}", exc_info=True)
 
 def train(checkpoint: str, config: SFTConfig, no_save_tokenizer: bool):
     # Set RNG states on all devices.
