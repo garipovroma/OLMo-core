@@ -21,6 +21,7 @@ from olmo_core.data import (
     TokenizerConfig,
 )
 from olmo_core.data.types import LongDocStrategy
+from olmo_core.distributed.checkpoint import save_state_dict
 from olmo_core.distributed.parallel import DataParallelType
 from olmo_core.distributed.utils import get_local_rank, get_rank
 from olmo_core.exceptions import OLMoConfigurationError
@@ -44,6 +45,7 @@ from olmo_core.train import (
     teardown_training_environment,
 )
 from olmo_core.train.callbacks import (
+    Callback,
     CheckpointerCallback,
     ConfigSaverCallback,
     GarbageCollectorCallback,
@@ -403,22 +405,51 @@ class SFTConfig(Config):
 
         return config
 
+class NirvanaDumpCallback(Callback):
+    def post_checkpoint_saved(self, path: str):
+        if get_rank() == 0:
+            self.trainer._join_bookkeeping_ops()
+            import nirvana_dl.snapshot
+            try:
+                nirvana_dl.snapshot.dump_snapshot()
+            except Exception as e:
+                log.warning(f"Nirvana snapshot failed: {e}")
+
+
+class ModelOnlyCheckpointCallback(Callback):
+    def __init__(self, num_checkpoints: int = 20):
+        self.num_checkpoints = num_checkpoints
+        self._save_interval: Optional[int] = None
+        self._saved: list = []
+
+    def pre_train(self):
+        total = self.trainer.max_steps
+        if total is None:
+            raise RuntimeError("ModelOnlyCheckpointCallback requires a step-based max_duration")
+        self._save_interval = max(1, total // self.num_checkpoints)
+        log.info(f"Model-only checkpoint interval: every {self._save_interval} steps")
+
+    def post_checkpoint_saved(self, path: str):
+        if self._save_interval is None:
+            return
+        if self.trainer.global_step % self._save_interval != 0:
+            return
+        model_path = str(path) + "-model"
+        log.info(f"Saving model-only checkpoint to '{model_path}'...")
+        sd = self.trainer.train_module.state_dict_to_save(optim=False)
+        save_state_dict(
+            f"{model_path}/model_and_optim",
+            sd,
+            process_group=self.trainer.checkpointer.process_group,
+        )
+        self._saved.append(model_path)
 
 def train(checkpoint: str, config: SFTConfig, no_save_tokenizer: bool):
     # Set RNG states on all devices.
     seed_all(config.init_seed)
 
-    from olmo_core.train.callbacks import Callback
-
-    class NirvanaDumpCallback(Callback):
-        def post_checkpoint_saved(self, path):
-            if get_rank() == 0:
-                import nirvana_dl.snapshot
-                print(f'---------------- DUMPING NIRVANA SNAPSHOT ----------------')
-                nirvana_dl.snapshot.dump_snapshot()
-                print(f'---------------- NIRVANA SNAPSHOT DUMPER ----------------')
-
     config.trainer.add_callback("nirvana_snapshot", NirvanaDumpCallback())
+    config.trainer.add_callback("model_only_checkpointer", ModelOnlyCheckpointCallback(num_checkpoints=5))
 
     # Build components.
     model = config.model.build(init_device="meta")
